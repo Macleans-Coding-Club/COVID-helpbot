@@ -58,7 +58,7 @@ send_loc.row(location_button)
 @bot.message_handler(commands=['start'])
 def command_start(m):
     cid = m.chat.id
-    if cid not in other and cid not in need_help and cid not in helpers:  # if user hasn't used the "/start" command yet:
+    if str(cid) not in other and str(cid) not in need_help and str(cid) not in helpers:  # if user hasn't used the "/start" command yet:
           bot.send_message(cid, "Hello, stranger, ")
           bot.send_message(cid, "Scanning complete, I know you now")
           other[cid] = ''
