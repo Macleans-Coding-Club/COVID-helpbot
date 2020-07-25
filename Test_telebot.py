@@ -1,10 +1,10 @@
-import telebot
+import telebot                  #import telebot libary
 from telebot import types
 
-bot = telebot.TeleBot("1317717235:AAGo2iVPuabY6FpayigYouJuA5ydgg_ypr4", parse_mode=None)
+bot = telebot.TeleBot("TOKEN", parse_mode=None) 
 
-markup = types.ReplyKeyboardMarkup()
-itembtna = types.KeyboardButton('a')
+markup = types.ReplyKeyboardMarkup()    #setting up new keyboard
+itembtna = types.KeyboardButton('a')    
 itembtnv = types.KeyboardButton('v')
 itembtnc = types.KeyboardButton('c')
 itembtnd = types.KeyboardButton('d')
@@ -18,9 +18,9 @@ def send_welcome(message):
     bot.send_message(message.chat.id, "I'm called TeleBot beep boop",  reply_markup=markup)
 
 
-# Handle all other messages with content_type 'text' (content_types defaults to ['text'])
-@bot.message_handler(func=lambda message: True)
+# Handle all other messages with content_type 'text' (content_types defaults to ['text'])   
+@bot.message_handler(func=lambda message: True)     #reply back with the same message
 def send_any(message):
-    bot.send_message(message.chat.id, message.text)
+    bot.send_message(message.chat.id, message.text)         
 
 bot.polling()
