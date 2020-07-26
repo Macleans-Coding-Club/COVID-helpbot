@@ -8,9 +8,9 @@ hp = pd.read_csv('helpers.csv', index_col=0)
 nh = pd.read_csv('need_help.csv', index_col=0)
 oth = pd.read_csv('other.csv', index_col=0)
 
-helpers = hp.to_dict()   # save these in a csv file
-need_help = nh.to_dict() 
-other = oth.to_dict() 
+helpers = hp.T.to_dict()   # save these in a csv file
+need_help = nh.T.to_dict() 
+other = {}#oth.T.to_dict()
 
 commands = {  # command description for new users 
     'start'       : 'Get used to the bot',
@@ -34,8 +34,8 @@ markup = types.ReplyKeyboardMarkup(row_width=2)
 itembtn1 = types.KeyboardButton('/help')
 itembtn2 = types.KeyboardButton('/elderly')
 itembtn3 = types.KeyboardButton('/helper')
-itembyn4 = types.KeyboardButton('/needhelp')
-markup.add(itembtn1, itembtn2, itembtn3)
+itembtn4 = types.KeyboardButton('/needhelp')
+markup.add(itembtn1, itembtn2, itembtn3, itembtn4)
 
 force = types.ForceReply(selective=False)
 
@@ -58,7 +58,7 @@ send_loc.row(location_button)
 @bot.message_handler(commands=['start'])
 def command_start(m):
     cid = m.chat.id
-    if str(cid) not in other and str(cid) not in need_help and str(cid) not in helpers:  # if user hasn't used the "/start" command yet:
+    if cid not in other and cid not in need_help and cid not in helpers:  # if user hasn't used the "/start" command yet:
           bot.send_message(cid, "Hello, stranger, ")
           bot.send_message(cid, "Scanning complete, I know you now")
           other[cid] = ''
@@ -85,17 +85,17 @@ def helping(m):
     global register
     cid = m.chat.id
     register = "helper"
-    if str(cid) in other:
+    if cid in other:
         name = bot.send_message(cid, 'What is your name?',reply_markup = force)
         bot.register_next_step_handler(name, get_name)
         #take user contact details
         
-    elif str(cid) in need_help:
+    elif cid in need_help:
         name = bot.send_message(cid, 'What is your name?',reply_markup = force)
         bot.register_next_step_handler(name, get_name)
         #take user contact details
     
-    elif str(cid) in helpers:
+    elif cid in helpers:
         bot.send_message(cid, "You are already a helper, changing details")
         name = bot.send_message(cid, 'What is your name?',reply_markup = force)
         bot.register_next_step_handler(name, get_name)
@@ -105,21 +105,35 @@ def helping(m):
 def needinghelp(m):
      global register
      cid = m.chat.id
-     register = "vunerable"
-     if str(cid) in other:
+     register = "vulnerable"
+     if cid in other:
           name = bot.send_message(cid, 'What is your name?',reply_markup = force)
           bot.register_next_step_handler(name, get_name)
           #take user contact details  
-     elif str(cid) in helpers:
+     elif cid in helpers:
           name = bot.send_message(cid, 'What is your name?',reply_markup = force)
           bot.register_next_step_handler(name, get_name)
           #take user contact details
     
-     elif str(cid) in need_help:
+     elif cid in need_help:
           bot.send_message(cid, "You are already registered, changing details")
           name = bot.send_message(cid, 'What is your name?',reply_markup = force)
           bot.register_next_step_handler(name, get_name)
-     
+
+#ask for help
+@bot.message_handler(commands=['needhelp'])
+def helpme(m):
+    cid = m.chat.id
+    if cid not in need_help:
+        bot.send_message(cid, "You are not registered as an elder, please register first")
+    else:
+        bot.send_message(cid, "Here is a list of volunteers and their info")
+        print(helpers)
+        for helper in helpers:
+            person = helpers[helper]
+            message = "Name: "+str(person['NAME'])+"  Age: "+str(person['AGE'])+"  Gender: "+str(person['GENDER'])+"  Phone: "+str(person['PHONE'])+"  Email: "+str(person['EMAIL'])+'\n'
+            bot.send_message(cid, message)
+    bot.send_message(cid, "Choose a command:", reply_markup=markup)
 
 def get_name(m):
      cid = m.chat.id
@@ -186,7 +200,7 @@ def save_info(m):
      cid = m.chat.id
      info = m.text
      if info == 'yes':
-          if register == "vunerable":
+          if register == "vulnerable":
                print(details)  #save info
                if cid in other:
                     other.pop(cid)
@@ -208,11 +222,11 @@ def save_info(m):
      bot.send_message(cid, "Choose a command:", reply_markup=markup)
 
 def save_to_csv():
-     hp = pd.DataFrame(data=helpers)
+     hp = pd.DataFrame(data=helpers).T
      hp.to_csv('helpers.csv')
-     nh = pd.DataFrame(data=need_help)
+     nh = pd.DataFrame(data=need_help).T
      nh.to_csv('need_help.csv')
-     oth = pd.DataFrame(data=other)
+     oth = pd.DataFrame(data=other).T
      oth.to_csv('other.csv')
 
 bot.polling()
