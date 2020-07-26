@@ -36,7 +36,7 @@ def ChooseGroup(message):
 def helping(message):
     cid = message.chat.id
     global Data_sheet
-    Data_sheet = "D://Volunteer.csv"
+    Data_sheet = "Volunteer.csv"
     print(Data_sheet)
     volunteer_msg = bot.send_message(cid, "Thank you for volunteering")
     command_start(message)
@@ -45,7 +45,7 @@ def helping(message):
 def needinghelp(message):
     cid = message.chat.id
     global Data_sheet
-    Data_sheet = "D://Elderly.csv"
+    Data_sheet = "Elderly.csv"
     print(Data_sheet)
     elderly_msg = bot.send_message(cid, "Thank you for using our service!", )
     command_start(message)
