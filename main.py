@@ -37,7 +37,7 @@ def ChooseGroup(message):
 def helping(message):
     cid = message.chat.id
     global Data_sheet
-    Data_sheet = "D://Volunteer.csv"
+    Data_sheet = "Volunteer.csv"
     print(Data_sheet)
     volunteer_msg = bot.send_message(cid, "Thank you for volunteering")
     command_start(message)
@@ -46,7 +46,7 @@ def helping(message):
 def needinghelp(message):
     cid = message.chat.id
     global Data_sheet
-    Data_sheet = "D://Elderly.csv"
+    Data_sheet = "Elderly.csv"
     print(Data_sheet)
     elderly_msg = bot.send_message(cid, "Thank you for using our service!", )
     command_start(message)
@@ -117,12 +117,5 @@ def handle_location(message):
     RowContent = [knownUsers[0], userName, userAge, userGender, userPhone, userMail, location_latitude, location_longitude]
     AddToCsvFile(Data_sheet , RowContent)
 
-@bot.message_handler(commands=['choose_volunteer'])
-def volunteer_choose(message):
-    cid = message.chat.id
-    bot.send_message(cid,"available volunteer")
-    volunteer_list = pd.read_csv('D://Volunteer.csv')
-    for name in volunteer_list['Name']:
-        bot.send_message(cid,name)
 
 bot.polling()
