@@ -18,9 +18,8 @@ def AddToCsvFile(FileName, ListRowContent):
 Gender_markup = types.ReplyKeyboardMarkup(one_time_keyboard=True)
 Gender_markup.add('Male', 'Female')
 userLocation_markup = types.ReplyKeyboardMarkup()
-yesBt = types.KeyboardButton(text = 'Yes', request_location = True)
-noBt = types.KeyboardButton(text = 'No')
-userLocation_markup.row(yesBt,noBt)
+yesBt = types.KeyboardButton(text = 'Share location', request_location = True)
+userLocation_markup.row(yesBt)
 force = types.ForceReply(selective=False)
 Group_markup = types.ReplyKeyboardMarkup(one_time_keyboard=True)
 Group_markup.add('I need help!', 'I want to help!')
@@ -37,7 +36,7 @@ def ChooseGroup(message):
 def helping(message):
     cid = message.chat.id
     global Data_sheet
-    Data_sheet = "Volunteer.csv"
+    Data_sheet = "D://Volunteer.csv"
     print(Data_sheet)
     volunteer_msg = bot.send_message(cid, "Thank you for volunteering")
     command_start(message)
@@ -46,7 +45,7 @@ def helping(message):
 def needinghelp(message):
     cid = message.chat.id
     global Data_sheet
-    Data_sheet = "Elderly.csv"
+    Data_sheet = "D://Elderly.csv"
     print(Data_sheet)
     elderly_msg = bot.send_message(cid, "Thank you for using our service!", )
     command_start(message)
@@ -60,7 +59,7 @@ def command_start(message):
     if cid not in df.values:        
         knownUsers.append(str(cid))  
         print(cid)
-        start_msg = bot.send_message(cid , "Hello, it seems like this is the first time you are using our service. I will need your information. First, what is your name?", reply_markup = force)
+        start_msg = bot.send_message(cid , "Hello, it seems like this is the first time you are using our service. I will need your information. Firstly, what is your name?", reply_markup = force)
         bot.register_next_step_handler(start_msg, ask_for_age)
     else:
         bot.send_message(cid, "Hmm, it seems like we already know eachother!")
@@ -114,8 +113,8 @@ def handle_location(message):
     location_longitude = message.location.longitude
     print(location_latitude, location_longitude)
     
+    
     RowContent = [knownUsers[0], userName, userAge, userGender, userPhone, userMail, location_latitude, location_longitude]
     AddToCsvFile(Data_sheet , RowContent)
-
 
 bot.polling()
