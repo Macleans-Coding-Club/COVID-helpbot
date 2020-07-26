@@ -208,11 +208,11 @@ def save_info(m):
      bot.send_message(cid, "Choose a command:", reply_markup=markup)
 
 def save_to_csv():
-     hp = pd.DataFrame(data=helpers, index=[0])
+     hp = pd.DataFrame(data=helpers)
      hp.to_csv('helpers.csv')
-     nh = pd.DataFrame(data=need_help, index=[0])
+     nh = pd.DataFrame(data=need_help)
      nh.to_csv('need_help.csv')
-     oth = pd.DataFrame(data=other, index=[0])
+     oth = pd.DataFrame(data=other)
      oth.to_csv('other.csv')
 
 bot.polling()
