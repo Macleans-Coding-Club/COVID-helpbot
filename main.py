@@ -1,120 +1,235 @@
-import telebot
+import telebot                  #import telebot libary
 from telebot import types
 import pandas as pd
-from csv import writer
 
-bot = telebot.TeleBot("1317717235:AAGo2iVPuabY6FpayigYouJuA5ydgg_ypr4", parse_mode=None)
-knownUsers = []
+bot = telebot.TeleBot("992300889:AAEuMc0EdcBm7enrID7FDUjVuEzo9WqHbzM")
 
-#-------------------------------------------------------------------------------
-def AddToCsvFile(FileName, ListRowContent):
-    with open(FileName, 'a+', newline='') as i:
-        csv_writer = writer(i)
-        csv_writer.writerow(ListRowContent)
-        #This function is used to add to a csv file
-#---------------------------------------------------------------------------------
+commands = {  # command description for new users 
+    'start'       : 'Get used to the bot',
+    'help'        : 'show available commands',
+    'elderly'    : 'register as vunerable',
+    'helper'      : 'register as volunteer helper',
+    'needhelp'    :  'ask a volunteer for help'
+}
 
+details = pd.DataFrame({
+     'ID'  :'',
+     'NAME':'',
+     'AGE':'',
+     'GENDER':'',
+     'PHONE':'',
+     'EMAIL':'',
+     'LONGITUDE':'',
+     'LATITUDE':''
+},columns = ['ID','NAME','AGE','GENDER','PHONE','EMAIL','LONGITUDE','LATITUDE'],index = ['1'])
 
-Gender_markup = types.ReplyKeyboardMarkup(one_time_keyboard=True)
-Gender_markup.add('Male', 'Female')
-userLocation_markup = types.ReplyKeyboardMarkup()
-yesBt = types.KeyboardButton(text = 'Share location', request_location = True)
-userLocation_markup.row(yesBt)
+markup = types.ReplyKeyboardMarkup(row_width=2)
+itembtn1 = types.KeyboardButton('/help')
+itembtn2 = types.KeyboardButton('/elderly')
+itembtn3 = types.KeyboardButton('/helper')
+itembtn4 = types.KeyboardButton('/needhelp')
+markup.add(itembtn1, itembtn2, itembtn3, itembtn4)
+
 force = types.ForceReply(selective=False)
-Group_markup = types.ReplyKeyboardMarkup(one_time_keyboard=True)
-Group_markup.add('I need help!', 'I want to help!')
-#--------------------------------------------------------------------------------------
 
+yesno = types.ReplyKeyboardMarkup(row_width=2)
+yes = types.KeyboardButton('yes')
+no = types.KeyboardButton('no')
+yesno.add(yes,no)
 
-@bot.message_handler(commands=['start']) #start
-def ChooseGroup(message):
-    cid = message.chat.id
-    bot.send_message(message.chat.id, "Are you looking to help or do you need help?", reply_markup = Group_markup)
+gender = types.ReplyKeyboardMarkup(row_width=2)
+male = types.KeyboardButton('male')
+female = types.KeyboardButton('female')
+others = types.KeyboardButton('other')
+gender.add(male,female,others)
 
+send_loc = types.ReplyKeyboardMarkup()
+location_button = types.KeyboardButton(text="Send Location", request_location=True)
+send_loc.row(location_button)
 
-@bot.message_handler(func=lambda message: message.text == "I want to help!")
-def helping(message):
-    cid = message.chat.id
-    global Data_sheet
-    Data_sheet = "Volunteer.csv"
-    print(Data_sheet)
-    volunteer_msg = bot.send_message(cid, "Thank you for volunteering")
-    command_start(message)
-
-@bot.message_handler(func=lambda message: message.text == "I need help!")
-def needinghelp(message):
-    cid = message.chat.id
-    global Data_sheet
-    Data_sheet = "Elderly.csv"
-    print(Data_sheet)
-    elderly_msg = bot.send_message(cid, "Thank you for using our service!", )
-    command_start(message)
-    
-    
-def command_start(message):
-    cid = message.chat.id
-    global df
-    df = pd.read_csv(Data_sheet)
-    
-    if cid not in df.values:        
-        knownUsers.append(str(cid))  
-        print(cid)
-        start_msg = bot.send_message(cid , "Hello, it seems like this is the first time you are using our service. I will need your information. Firstly, what is your name?", reply_markup = force)
-        bot.register_next_step_handler(start_msg, ask_for_age)
+# handle the "/start" command
+@bot.message_handler(commands=['start'])
+def command_start(m):
+    cid = m.chat.id
+    update()
+    if cid not in need_help['ID'].values and cid not in helpers['ID'].values :  # if user hasn't used the "/start" command yet:
+          bot.send_message(cid, "Hello, stranger")
+          bot.send_message(cid, "You are not register in the system, please register as a helper or an elder")
+          command_help(m)  # show the new user the help page
     else:
-        bot.send_message(cid, "Hmm, it seems like we already know eachother!")
-        
-
+          bot.send_message(cid, "Hello, welcome back")
+          bot.send_message(cid, "Choose a command:", reply_markup=markup)
     
-def ask_for_age(message):       
-    cid = message.chat.id
-    global userName
-    userName = message.text
-    print(userName)
-    age_msg = bot.send_message(cid , "What is your age?", reply_markup = force)
-    bot.register_next_step_handler(age_msg, ask_for_gender)
 
-def ask_for_gender(message):    #ask_for gender
-    cid = message.chat.id
-    global userAge
-    userAge = message.text
-    print(userAge)
-    sex_msg = bot.send_message(cid , "What gender do you indentify as?", reply_markup = Gender_markup)
-    bot.register_next_step_handler(sex_msg, ask_for_phone)
 
-def ask_for_phone(message):     #ask_for_phone
-    cid = message.chat.id
-    global userGender
-    userGender = message.text
-    print(userGender)
-    phone_msg = bot.send_message(cid , "What is your phone number?", reply_markup = force)
-    bot.register_next_step_handler(phone_msg, ask_for_mail)
+# help page
+@bot.message_handler(commands=['help'])
+def command_help(m):
+    cid = m.chat.id
+    help_text = "The following commands are available: \n"
+    for key in commands:  # generate help text out of the commands dictionary defined at the top
+        help_text += "/" + key + ": "
+        help_text += commands[key] + "\n"
+    bot.send_message(cid, help_text)  # send the generated help page
+    bot.send_message(cid, "Choose a command:", reply_markup=markup)
 
-def ask_for_mail(message):      #ask_ for_mail
-    cid = message.chat.id
-    global userPhone
-    userPhone = message.text
-    print(userPhone)
-    mail_msg = bot.send_message(cid , "What is your email address?", reply_markup = force)
-    bot.register_next_step_handler(mail_msg, ask_for_location)
+#register as helper
+@bot.message_handler(commands=['helper'])
+def helping(m):
+    global register
+    cid = m.chat.id
+    register = "helper"
+    if cid in need_help:
+        name = bot.send_message(cid, 'What is your name?',reply_markup = force)
+        bot.register_next_step_handler(name, get_name)
+        #take user contact details
+    elif cid in helpers:
+        bot.send_message(cid, "You are already a helper, changing details")
+        name = bot.send_message(cid, 'What is your name?',reply_markup = force)
+        bot.register_next_step_handler(name, get_name)
+    else:
+        name = bot.send_message(cid, 'What is your name?',reply_markup = force)
+        bot.register_next_step_handler(name, get_name)
+        #take user contact details
 
-def ask_for_location(message):  #ask_for_location
-    cid = message.chat.id
-    global userMail
-    userMail = message.text
-    print(userMail)
-    bot.send_message(cid, "Can you share your location with us?", reply_markup = userLocation_markup)
+#register as vulnerable
+@bot.message_handler(commands=['elderly'])
+def needinghelp(m):
+    global register
+    cid = m.chat.id
+    register = "vulnerable" 
+    if cid in helpers:
+        name = bot.send_message(cid, 'What is your name?',reply_markup = force)
+        bot.register_next_step_handler(name, get_name)
+        #take user contact details
+    elif cid in need_help:
+        bot.send_message(cid, "You are already registered, changing details")
+        name = bot.send_message(cid, 'What is your name?',reply_markup = force)
+        bot.register_next_step_handler(name, get_name)
+    else:
+        name = bot.send_message(cid, 'What is your name?',reply_markup = force)
+        bot.register_next_step_handler(name, get_name)
 
-@bot.message_handler(content_types=['location'])    #collect user location 
-def handle_location(message):
-    global location_latitude
-    location_latitude = message.location.latitude
-    global location_longitude
-    location_longitude = message.location.longitude
-    print(location_latitude, location_longitude)
-    
-    
-    RowContent = [knownUsers[0], userName, userAge, userGender, userPhone, userMail, location_latitude, location_longitude]
-    AddToCsvFile(Data_sheet , RowContent)
+#ask for help
+@bot.message_handler(commands=['needhelp'])
+def helpme(m):
+    update()
+    cid = m.chat.id
+    if cid not in need_help['ID'].values:
+        bot.send_message(cid, "You are not registered as an elder, please register first")
+    else:
+        bot.send_message(cid, "Here is a list of volunteers and their info")
+        print(helpers)
+        for index,row in helpers.iterrows():
+            person = row
+            message = "Name: "+str(person['NAME'])+"\n Age: "+str(person['AGE'])+"\n Gender: "+str(person['GENDER'])+"\n Phone: "+str(person['PHONE'])+"\n Email: "+str(person['EMAIL'])
+            bot.send_message(cid, message)
+    bot.send_message(cid, "Choose a command:", reply_markup=markup)
+
+def get_name(m):
+     cid = m.chat.id
+     info = m.text
+     details['ID'] = cid
+     details['NAME'] = info
+     age = bot.send_message(cid, 'What is your age?',reply_markup = force)
+     bot.register_next_step_handler(age, get_age)
+
+def get_age(m):
+     
+     cid = m.chat.id
+     info = m.text
+     details['AGE'] = info
+     gen = bot.send_message(cid, 'What is your gender?',reply_markup = gender)
+     bot.register_next_step_handler(gen, get_gender)
+
+def get_gender(m):
+     
+     cid = m.chat.id
+     info = m.text
+     details['GENDER'] = info
+     phone = bot.send_message(cid, 'What is your phone number?',reply_markup = force)
+     bot.register_next_step_handler(phone, get_phone)
+
+def get_phone(m):
+     
+     cid = m.chat.id
+     info = m.text
+     details['PHONE'] = info
+     email = bot.send_message(cid, 'What is your email address?',reply_markup = force)
+     bot.register_next_step_handler(email, get_email)
+
+def get_email(m):
+     
+     cid = m.chat.id
+     info = m.text
+     details['EMAIL'] = info
+     location = bot.send_message(cid, 'Send current location as home address?',reply_markup = yesno)
+     bot.register_next_step_handler(location, get_location)
+
+def get_location(m):
+     cid = m.chat.id
+     info = m.text
+     if info == 'yes':
+          try:
+               locate = bot.send_message(cid,"Please let us know your location", reply_markup=send_loc)
+               bot.register_next_step_handler(locate, handle_location)
+          except:
+               details['LONGITUDE'] = ''
+               details['LATITUDE'] = ''
+               end = bot.send_message(cid, 'Save information?',reply_markup = yesno)
+               bot.register_next_step_handler(end, save_info)
+               
+     elif info == 'no':
+          details['LONGITUDE'] = ''
+          details['LATITUDE'] = ''
+          end = bot.send_message(cid, 'Save information?',reply_markup = yesno)
+          bot.register_next_step_handler(end, save_info)
+
+def handle_location(m):
+     cid = m.chat.id
+     details['LONGITUDE'] = str(m.location.latitude)
+     details['LATITUDE'] = str(m.location.longitude)
+     end = bot.send_message(cid, 'Save information?',reply_markup = yesno)
+     bot.register_next_step_handler(end, save_info)
+
+def save_info(m):
+     cid = m.chat.id
+     info = m.text
+     global helpers
+     global need_help
+     if info == 'yes':
+          if register == "vulnerable":
+               print(details)  #save info
+               if cid in helpers['ID'].values:
+                    helpers = helpers[helpers['ID'] != cid]
+               elif cid in need_help['ID'].values:
+                    need_help = need_help[need_help['ID'] != cid]
+               update()
+               need_help = need_help.append(details)
+               save_to_csv()
+          elif register == "helper":
+               print(details)  #save info
+               if cid in need_help['ID'].values:
+                    need_help = need_help[need_help['ID'] != cid]
+               elif cid in helpers['ID'].values:
+                    helpers = helpers[helpers['ID'] != cid]
+               update()
+               helpers = helpers.append(details)
+               save_to_csv()
+     elif info == 'no':
+          details.loc['1'] = ''
+     bot.send_message(cid, "Choose a command:", reply_markup=markup)
+
+def save_to_csv():
+    helpers.to_csv('helpers.csv',index=False)
+    need_help.to_csv('need_help.csv',index=False)
+
+def update():
+    global helpers
+    global need_help
+    helpers = pd.read_csv('helpers.csv', index_col = False)
+    need_help = pd.read_csv('need_help.csv', index_col = False)
+
+
 
 bot.polling()
