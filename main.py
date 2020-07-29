@@ -221,14 +221,14 @@ def save_info(m):
      bot.send_message(cid, "Choose a command:", reply_markup=markup)
 
 def save_to_csv():
-    helpers.to_csv('helpers.csv',index=False)
-    need_help.to_csv('need_help.csv',index=False)
+    helpers.to_csv('Volunteer.csv',index=False)
+    need_help.to_csv('Elderly.csv',index=False)
 
 def update():
     global helpers
     global need_help
-    helpers = pd.read_csv('helpers.csv', index_col = False)
-    need_help = pd.read_csv('need_help.csv', index_col = False)
+    helpers = pd.read_csv('Volunteer.csv', index_col = False)
+    need_help = pd.read_csv('Elderly.csv', index_col = False)
 
 
 
