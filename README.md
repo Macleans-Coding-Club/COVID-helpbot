@@ -2,7 +2,7 @@
 
 Our helpbot connects volunteers and people in need! Our bot is based in the Telegram application
 
-# Note
+## Note  (important)
 
 This branch has different csv files, please download the files if you want to run this bot.
 
