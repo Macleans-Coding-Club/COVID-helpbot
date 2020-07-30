@@ -1,8 +1,12 @@
 import telebot                  #import telebot libary
 from telebot import types
 import pandas as pd
+import math
+from geopy.geocoders import Nominatim
+from geopy.distance import geodesic
 
 bot = telebot.TeleBot("992300889:AAEuMc0EdcBm7enrID7FDUjVuEzo9WqHbzM")
+geolocator = Nominatim(user_agent="COVID-helpbot")
 
 commands = {  # command description for new users 
     'start'       : 'Get used to the bot',
@@ -119,11 +123,28 @@ def helpme(m):
         bot.send_message(cid, "You are not registered as an elder, please register first")
     else:
         bot.send_message(cid, "Here is a list of volunteers and their info")
-        print(helpers)
-        for index,row in helpers.iterrows():
-            person = row
-            message = "Name: "+str(person['NAME'])+"\n Age: "+str(person['AGE'])+"\n Gender: "+str(person['GENDER'])+"\n Phone: "+str(person['PHONE'])+"\n Email: "+str(person['EMAIL'])
-            bot.send_message(cid, message)
+        vol = []
+        longitude = need_help.loc[need_help.index[need_help['ID'] == cid], 'LONGITUDE'][0]
+        latitude = need_help.loc[need_help.index[need_help['ID'] == cid], 'LATITUDE'][0]
+        if pd.isnull(longitude) or pd.isnull(latitude):  #if location is recorded
+            for index in range(5):
+                row = helpers.loc[index]
+                message = "Name: "+str(row['NAME'])+"\n Age: "+str(row['AGE'])+"\n Gender: "+str(row['GENDER'])+"\n Phone: "+str(row['PHONE'])+"\n Email: "+str(row['EMAIL'])
+                bot.send_message(cid, message)
+        else:
+            for index,row in helpers.iterrows():    #find nearest volunteer
+                if pd.isnull(row['LONGITUDE']) or pd.isnull(row['LATITUDE']):
+                    vol.append((index, 9999))
+                else:
+                    distance = geodesic((latitude,longitude), (row['LATITUDE'],row['LONGITUDE'])).miles
+                    vol.append((index, distance))
+            vol.sort(key = lambda person: person[1])
+            for index in range(5):
+                row = helpers.loc[vol[index][0]]
+                location = geolocator.reverse(str(row['LATITUDE'])+','+str(row['LONGITUDE']))
+                message = " Name: "+str(row['NAME'])+"\n Age: "+str(row['AGE'])+"\n Gender: "+str(row['GENDER'])+"\n Phone: "+str(row['PHONE'])+"\n Email: "+str(row['EMAIL'])+"\n Address: "+str(location.address)
+                bot.send_message(cid, message)
+                
     bot.send_message(cid, "Choose a command:", reply_markup=markup)
 
 def get_name(m):
@@ -187,8 +208,8 @@ def get_location(m):
 
 def handle_location(m):
      cid = m.chat.id
-     details['LONGITUDE'] = str(m.location.latitude)
-     details['LATITUDE'] = str(m.location.longitude)
+     details['LATITUDE'] = str(m.location.latitude)
+     details['LONGITUDE'] = str(m.location.longitude)
      end = bot.send_message(cid, 'Save information?',reply_markup = yesno)
      bot.register_next_step_handler(end, save_info)
 
