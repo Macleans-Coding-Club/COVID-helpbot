@@ -2,6 +2,10 @@
 
 Our helpbot connects volunteers and people in need! Our bot is based in the Telegram application
 
+# Note
+
+This branch has different csv files, please download the files if you want to run this bot.
+
 ## Built With
 
 * [Telebot](https://pypi.org/project/telebot/) - The bot used
